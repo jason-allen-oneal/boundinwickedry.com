@@ -1,0 +1,245 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DB_URL")
+}
+
+model ChatMessages {
+  id          Int       @id @default(autoincrement())
+  roomId      Int
+  authorId    Int
+  recipientId Int       @default(0)
+  time        DateTime  @default(now()) @db.Timestamp(0)
+  message     String    @db.Text
+  type        String    @default("chat") @db.VarChar(20)
+  User        User      @relation(fields: [authorId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ChatMessages_ibfk_2")
+  ChatRooms   ChatRooms @relation(fields: [roomId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ChatMessages_ibfk_4")
+
+  @@index([authorId], map: "authorId")
+  @@index([recipientId], map: "recipientId")
+  @@index([roomId], map: "roomId")
+}
+
+model ChatRooms {
+  id           Int            @id @default(autoincrement())
+  name         String         @unique(map: "name") @db.VarChar(60)
+  creator      Int
+  date         DateTime       @default(now()) @db.Timestamp(0)
+  ChatMessages ChatMessages[]
+}
+
+model Entry {
+  id        Int     @id @unique @default(autoincrement())
+  galleryId Int     @default(0)
+  thumb     String  @db.VarChar(255)
+  path      String  @db.VarChar(255)
+  height    Int
+  width     Int
+  Gallery   Gallery @relation(fields: [galleryId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "EntryGallery")
+
+  @@index([galleryId], map: "EntryGallery")
+}
+
+model Events {
+  id          Int      @id @default(autoincrement())
+  title       String   @db.VarChar(255)
+  description String   @db.Text
+  date        DateTime @default(now()) @db.Timestamp(0)
+}
+
+model Gallery {
+  id              Int              @id @unique @default(autoincrement())
+  title           String           @db.VarChar(255)
+  slug            String           @unique(map: "slug") @db.VarChar(255)
+  date            DateTime         @default(now()) @db.Timestamp(0)
+  categoryId      Int              @default(0)
+  public          Boolean          @default(true)
+  featured        Boolean          @default(false)
+  authorId        Int              @default(0)
+  description     String           @db.VarChar(255)
+  Entry           Entry[]
+  User            User             @relation(fields: [authorId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "GalleryAuthor")
+  GalleryCategory GalleryCategory  @relation(fields: [categoryId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "Gallery_ibfk_1")
+  GalleryComment  GalleryComment[]
+  Tags            Tags[]
+
+  @@index([authorId], map: "GalleryAuthor")
+  @@index([categoryId], map: "categoryId")
+  @@index([title, date, authorId, slug, categoryId, featured, public], map: "title")
+}
+
+model GalleryCategory {
+  id      Int       @id @unique @default(autoincrement())
+  name    String    @db.VarChar(255)
+  slug    String    @db.VarChar(255)
+  parent  Int       @default(0)
+  count   Int       @default(0)
+  hidden  Boolean   @default(false)
+  Gallery Gallery[]
+}
+
+model GalleryComment {
+  id        Int      @id @unique @default(autoincrement())
+  galleryId Int      @default(0)
+  text      String   @db.Text
+  date      DateTime @default(now()) @db.Date
+  authorId  Int      @default(0)
+  votes     Int      @default(0)
+  Gallery   Gallery  @relation(fields: [galleryId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "GalleryComment_ibfk_1")
+  User      User     @relation(fields: [authorId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "GalleryComment_ibfk_2")
+
+  @@index([galleryId], map: "CommentGallery")
+  @@index([authorId], map: "GalleryCommentAuthor")
+}
+
+model Item {
+  id                Int          @id @unique @default(autoincrement())
+  title             String       @db.VarChar(255)
+  slug              String       @unique(map: "slug") @db.VarChar(255)
+  model             String       @db.VarChar(255)
+  price             String       @db.VarChar(255)
+  categoryId        Int          @default(0)
+  image             String       @db.VarChar(255)
+  description       String       @db.Text
+  brand             String       @db.VarChar(255)
+  color             String       @db.VarChar(255)
+  size              String       @db.VarChar(255)
+  option            String       @db.VarChar(255)
+  flavor            String       @db.VarChar(255)
+  scent             String       @db.VarChar(255)
+  material          String       @db.VarChar(255)
+  power             String       @db.VarChar(255)
+  height            String       @db.VarChar(255)
+  length            String       @db.VarChar(255)
+  length_insertable String       @db.VarChar(255)
+  diameter          String       @db.VarChar(255)
+  features          String       @db.Text
+  active            Boolean      @default(true)
+  in_stock          Boolean      @default(true)
+  suggested_retail  String       @db.VarChar(255)
+  date              DateTime     @default(now()) @db.Timestamp(0)
+  ShopCategory      ShopCategory @relation(fields: [categoryId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ItemCategory")
+
+  @@index([categoryId], map: "categoryId")
+}
+
+model ShopCategory {
+  id     Int     @id @unique @default(autoincrement())
+  name   String  @db.VarChar(255)
+  slug   String  @db.VarChar(255)
+  parent Int     @default(0)
+  count  Int     @default(0)
+  hidden Boolean @default(false)
+  Item   Item[]
+}
+
+model Tags {
+  id        Int        @unique(map: "id") @default(autoincrement())
+  type      String     @db.VarChar(255)
+  text      String     @db.VarChar(20)
+  articleId Int        @default(0)
+  galleryId Int        @default(0)
+  Article   ForumTopic @relation(fields: [articleId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "Tags_ibfk_1")
+  Gallery   Gallery    @relation(fields: [galleryId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "Tags_ibfk_2")
+
+  @@index([articleId], map: "articleId")
+  @@index([galleryId], map: "galleryId")
+  @@index([text], map: "text")
+}
+
+model Transactions {
+  id       Int    @id @unique @default(autoincrement())
+  tid      Int
+  rid      Int
+  payer_id Int
+  uid      Int
+  event    String @db.VarChar(255)
+  time     Int
+}
+
+model User {
+  id             Int              @id @unique @default(autoincrement())
+  email          String           @unique @db.VarChar(255)
+  password       String           @default("") @db.VarChar(255)
+  name           String           @db.VarChar(255)
+  fullname       String           @default("") @db.VarChar(255)
+  joined         DateTime         @default(now()) @db.Timestamp(0)
+  subtype        Int              @default(0)
+  verified       Boolean          @default(false)
+  admin          Boolean          @default(false)
+  avatar         String           @default("") @db.VarChar(255)
+  bio            String           @default("") @db.Text
+  slug           String           @unique(map: "slug") @db.VarChar(255)
+  company        String           @default("") @db.VarChar(255)
+  address1       String           @default("") @db.VarChar(255)
+  address2       String           @default("") @db.VarChar(255)
+  city           String           @default("") @db.VarChar(255)
+  state          String           @default("") @db.VarChar(255)
+  zip            Int              @default(0)
+  country        String           @default("") @db.VarChar(255)
+  chat           Int              @default(1)
+  socket         String           @default("") @db.VarChar(255)
+  ChatMessages   ChatMessages[]
+  ForumComment   ForumComment[]
+  ForumTopic     ForumTopic[]
+  Gallery        Gallery[]
+  GalleryComment GalleryComment[]
+  UserSettings   UserSettings?
+}
+
+model UserSettings {
+  id           Int    @id @default(autoincrement())
+  uid          Int    @unique(map: "uid")
+  sort         String @db.VarChar(255)
+  perPage      Int
+  avatarWidth  Int
+  avatarHeight Int
+  User         User   @relation(fields: [uid], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "UserSettings_ibfk_1")
+}
+
+model ForumCategory {
+  id         Int          @id @unique(map: "BlogCategory_id_key") @default(autoincrement())
+  name       String       @db.VarChar(255)
+  slug       String       @db.VarChar(255)
+  parent     Int          @default(0)
+  count      Int          @default(0)
+  hidden     Boolean      @default(false)
+  ForumTopic ForumTopic[]
+}
+
+model ForumComment {
+  id         Int        @id @unique(map: "BlogComment_id_key") @default(autoincrement())
+  topicId    Int        @default(0)
+  text       String     @db.Text
+  date       DateTime   @default(now()) @db.Date
+  authorId   Int        @default(0)
+  votes      Int        @default(0)
+  User       User       @relation(fields: [authorId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ArticleCommentAuthor")
+  ForumTopic ForumTopic @relation(fields: [topicId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "CommentArticle")
+
+  @@index([topicId], map: "CommentArticle")
+  @@index([authorId], map: "CommentAuthor")
+}
+
+model ForumTopic {
+  id            Int            @id @unique(map: "Article_id_key") @default(autoincrement())
+  title         String         @db.VarChar(255)
+  date          DateTime       @default(now()) @db.Timestamp(0)
+  authorId      Int            @default(0)
+  text          String         @db.Text
+  slug          String         @unique(map: "Article_slug_key") @db.VarChar(255)
+  categoryId    Int            @default(0)
+  featured      Boolean        @default(false)
+  public        Boolean        @default(true)
+  ForumComment  ForumComment[]
+  User          User           @relation(fields: [authorId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ArticleAuthor")
+  ForumCategory ForumCategory  @relation(fields: [categoryId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ArticleCategory")
+  Tags          Tags[]
+
+  @@index([authorId], map: "ArticleAuthor")
+  @@index([categoryId], map: "ArticleCategory")
+  @@index([title, date, authorId, slug, categoryId, featured, public], map: "title")
+}
