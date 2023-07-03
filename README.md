@@ -7,8 +7,8 @@
 * Tailwind
 
 ### Features
-[x] Gallery
-[x] Forum
-[x] eCommerce Shop
-[x] Chat Rooms
-[x] Event Calendar
+- [x] Gallery
+- [x] Forum
+- [x] eCommerce Shop
+- [x] Chat Rooms
+- [x] Event Calendar
